@@ -10,54 +10,24 @@ description: >
 
 # Rockstar Agents home (live)
 
-Build a LIVE Cowork artifact that lists every Rockstar / IR agent the user can
-access, where clicking an agent reveals the **skills** and **tools** inside it.
+Render a LIVE Cowork artifact that lists every Rockstar / IR agent the user can
+access, with the skills and tools inside each. Each skill has a **Start chat**
+button that opens a new Cowork chat for that skill.
 
 ## Procedure
-1. The data comes from the read-only `mcp__ir-mcp__rockstar_agents` tool. Call it
-   once normally to confirm the shape:
-   ```json
-   { "agents": [
-     { "name": "...", "displayName": "...", "description": "...",
-       "skills": [ { "skillId": "...", "name": "...", "description": "..." } ],
-       "tools":  [ { "name": "...", "description": "..." } ] }
-   ] }
-   ```
-2. Call `mcp__cowork__create_artifact` with:
-   - The HTML body from `templates/agents-home.html`.
-   - `mcp_tools: ["mcp__ir-mcp__rockstar_agents"]` — required; the page can only
-     call tools listed here.
-3. The template already fetches on load via `window.cowork.callMcpTool`, unwraps
-   the response, and renders clickable agent cards (click → skills + tools). Do
-   NOT hardcode the data, and do NOT add your own reload button — the artifact
-   header has one.
+1. Read `templates/agents-home.html` (in this skill folder).
+2. Call `mcp__cowork__create_artifact` with that file's contents as the HTML body
+   **VERBATIM** (byte-for-byte) and `mcp_tools: ["mcp__ir-mcp__rockstar_agents"]`
+   (required — the page can only call tools listed here).
+3. That's it. The template fetches live via `window.cowork.callMcpTool`, unwraps the
+   response, renders the agent/skills/tools, has a search box, wires every Start chat
+   button, and refreshes on reopen.
 
-## Click behavior — open details, then start a NEW chat (use the Claude deeplink)
-Make each **skill** card clickable:
-1. **Click a skill card → open a details panel/modal** showing the skill's name and full
-   description (and what it produces, if available).
-2. In that panel, add a **"Start chat"** button (and/or make the whole card's primary action
-   this). It opens a **NEW Cowork chat prefilled** with a launch prompt for that skill using
-   the Claude deeplink:
-   ```
-   claude://cowork/new?q=<URL-ENCODED PROMPT>
-   ```
-   where the prompt is: `Hey Rockstar, run the {skill display name} skill`.
-   Implement it as either:
-   - `<a href="claude://cowork/new?q=...">Start chat</a>`, or
-   - `onclick="window.location.href='claude://cowork/new?q=' + encodeURIComponent('Hey Rockstar, run the ' + NAME + ' skill')"`.
-   Always URL-encode the prompt. This opens a new Cowork session with the composer prefilled
-   so the user just sends it.
-Never leave cards inert.
-
-> Deeplink reference: `claude://cowork/new?q=...` opens a new Cowork session with the composer
-> prefilled; `claude://claude.ai/new?q=...` opens a new regular chat. (Some sandboxes may block
-> custom-scheme navigation — if the button doesn't open Claude, fall back to copying the prompt
-> to the clipboard with a "Copied — paste in a new chat" toast.)
-
-## Constraints
-- Keep the page background transparent; avoid top-level padding.
-- CDN libraries allowed inside artifacts: Chart.js, Grid.js, Mermaid only — inline
-  everything else.
+## Hard rules
+- **Do NOT write your own HTML/CSS/layout** — the template is already designed; use it as-is.
+- **Do NOT paste this skill's text, the procedure, or any instructions into the artifact.**
+  The page must contain ONLY the template markup — no visible prompt text.
+- **Do NOT print the catalog as chat text** — it MUST be one live artifact.
+- **Do NOT hardcode the data** and do NOT add your own reload button (the header has one).
 - Use ONLY the real catalog data the tool returns; never invent agents, skills, or tools.
 - One "Rockstar Agents" home — update the existing artifact instead of duplicating.
