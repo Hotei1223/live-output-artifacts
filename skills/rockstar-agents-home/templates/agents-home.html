@@ -291,7 +291,38 @@
   function attr(s){ return esc(s).replace(/'/g,"&#39;"); }
   function norm(s){ return String(s ?? "").toLowerCase().replace(/[^a-z0-9]/g,""); }
   function unwrap(r){ if(r&&r.isError) throw new Error("tool error"); if(r&&r.structuredContent!=null) return r.structuredContent; try{ return JSON.parse(r.content[0].text); }catch{ return r.content?.[0]?.text ?? r; } }
-  function rawText(r){ if(r==null) return ""; if(typeof r==="string") return r; if(r.content&&r.content[0]&&typeof r.content[0].text==="string") return r.content[0].text; try{ return JSON.stringify(r); }catch{ return String(r); } }
+  function rawText(r){ if(r==null) return ""; if(typeof r==="string") return r;
+    if(typeof r.text==="string") return r.text; if(typeof r.response==="string") return r.response;
+    if(typeof r.output==="string") return r.output; if(typeof r.completion==="string") return r.completion;
+    if(typeof r.message==="string") return r.message;
+    if(r.content&&r.content[0]&&typeof r.content[0].text==="string") return r.content[0].text;
+    try{ return JSON.stringify(r); }catch{ return String(r); } }
+  // robust JSON extraction from an askClaude reply (handles strings, objects, ```json fences, prose)
+  function parseAIJSON(resp){
+    let txt = typeof resp==="string" ? resp : rawText(resp);
+    if(!txt) return null;
+    txt = txt.replace(/```json/gi,"").replace(/```/g,"");
+    try{ return JSON.parse(txt); }catch(e){}
+    const start=txt.indexOf("{");
+    if(start>=0){ for(let end=txt.lastIndexOf("}"); end>start; end=txt.lastIndexOf("}",end-1)){ try{ return JSON.parse(txt.slice(start,end+1)); }catch(e){} } }
+    return null;
+  }
+  // single entry point for AI calls; returns parsed object or null (never throws)
+  async function askAI(prompt, data){
+    if(!(window.cowork && typeof window.cowork.askClaude==="function")) return null;
+    try{ return parseAIJSON(await window.cowork.askClaude(prompt, data||[])); }catch(e){ return null; }
+  }
+  // deterministic goal->path when AI is unavailable: keyword-match the goal to skills, order by journey
+  function goalFallback(goal){
+    const stop=new Set("the a an to of for in on with and or my our your i we want need get make build create launch grow start more new help me into from is are how do".split(" "));
+    const terms=(goal||"").toLowerCase().split(/[^a-z0-9]+/).filter(w=>w.length>2&&!stop.has(w));
+    const order=[...CATS.map(c=>c[0]),"More skills"];
+    let picks=SKILLS.map(s=>{ const hay=(s.name+" "+s.skillId+" "+(s.description||"")+" "+s.cat).toLowerCase(); let sc=0; terms.forEach(t=>{ if(hay.includes(t)) sc+=(s.name.toLowerCase().includes(t)?3:1); }); return {s,sc}; })
+      .filter(x=>x.sc>0).sort((a,b)=>b.sc-a.sc).slice(0,7).map(x=>x.s);
+    if(picks.length<3){ for(const c of order){ for(const s of SKILLS.filter(s=>s.cat===c)){ if(!picks.includes(s)){ picks.push(s); } if(picks.length>=5) break; } if(picks.length>=5) break; } }
+    picks.sort((a,b)=>order.indexOf(a.cat)-order.indexOf(b.cat));
+    return picks.slice(0,6).map(s=>({skillId:s.skillId, reason:"Matches your goal — "+s.cat+"."}));
+  }
   function dayKey(ts){ const d=new Date(ts); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); }
   function toast(msg){ const t=document.getElementById("cc-toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),1900); }
 
@@ -480,23 +511,22 @@
   // render: goal roadmap
   function roadmapStepHtml(r,i){ const s=byId[r.skillId]||SKILLS.find(x=>norm(x.name)===norm(r.skillId)); if(!s) return "";
     return `<div class="cc-rmstep ${s.status==="used"?"done":""}"><div class="cc-rmnum">${s.status==="used"?"&#10003;":(i+1)}</div><div class="cc-rmbody"><div class="rn">${esc(s.name)}</div><div class="rr">${esc(r.reason||"")}</div></div><a class="cc-start" style="align-self:center" href="${attr(startLink(s))}" onclick="ccStart('${attr(s.skillId)}')">${PLAY} Start</a></div>`; }
-  function paintRoadmap(goal, steps){ document.getElementById("cc-roadmap").innerHTML = (steps&&steps.length)? `<div class="cc-section-title">Path for: ${esc(goal)}</div>`+steps.map(roadmapStepHtml).join("") : '<div style="color:var(--faint);font:13px var(--mono);padding:8px">No steps generated. Try rephrasing your goal.</div>'; }
+  function paintRoadmap(goal, steps, aiUsed){
+    if(!steps||!steps.length){ document.getElementById("cc-roadmap").innerHTML='<div style="color:var(--faint);font:13px var(--mono);padding:8px">Couldn\'t map that goal to skills. Try different wording, or use a Playbook.</div>'; return; }
+    const cap = aiUsed===false ? '<div style="color:var(--faint);font:11.5px var(--mono);margin:0 2px 10px">Matched from your catalog (AI offline).</div>' : '';
+    document.getElementById("cc-roadmap").innerHTML = `<div class="cc-section-title">Path for: ${esc(goal)}</div>`+cap+steps.map(roadmapStepHtml).join("");
+  }
   window.ccBuildRoadmap=async function(){
     const goal=(document.getElementById("cc-goal-in").value||"").trim(); if(!goal){ toast("Type a goal first"); return; }
     const box=document.getElementById("cc-roadmap"); box.innerHTML='<div class="cc-recs-loading">Building your roadmap&hellip;</div>';
-    let steps=null;
-    try{
-      if(window.cowork && typeof window.cowork.askClaude==="function"){
-        const catalog=SKILLS.map(s=>({skillId:s.skillId,name:s.name,desc:(s.description||"").slice(0,120)}));
-        const prompt="You are a strategist for a business-agent platform. The user's goal is: \""+goal+"\". From the skill catalog, choose 4-7 skills and ORDER them into the best step-by-step path to reach that goal (prerequisites first). Return ONLY raw JSON: {\"steps\":[{\"skillId\":\"...\",\"reason\":\"why this step, one sentence\"}]}.";
-        const resp=await window.cowork.askClaude(prompt,[{goal},{catalog}]);
-        const txt=typeof resp==="string"?resp:rawText(resp); const m=txt.match(/\{[\s\S]*\}/);
-        if(m){ const j=JSON.parse(m[0]); if(j&&Array.isArray(j.steps)) steps=j.steps; }
-      }
-    }catch(e){ steps=null; }
-    if(!steps){ box.innerHTML='<div style="color:var(--faint);font:13px var(--mono);padding:8px">AI is unavailable right now. Try a Playbook instead, or retry.</div>'; return; }
-    try{ localStorage.setItem("cc_roadmap", JSON.stringify({goal,steps})); }catch(e){}
-    paintRoadmap(goal, steps);
+    const catalog=SKILLS.map(s=>({skillId:s.skillId,name:s.name,desc:(s.description||"").slice(0,70)}));
+    const prompt='You are a strategist for a business-agent platform. The user goal: "'+goal+'". From this skill catalog choose 4-7 skills and order them into the best step-by-step path (prerequisites first). Use ONLY skillId values that appear in the catalog. Return ONLY JSON: {"steps":[{"skillId":"...","reason":"one sentence"}]}.';
+    const j=await askAI(prompt,[{goal},{catalog}]);
+    let steps = (j&&Array.isArray(j.steps)) ? j.steps.filter(x=>x&&x.skillId&&byId[x.skillId]) : null;
+    const aiUsed = !!(steps&&steps.length);
+    if(!aiUsed) steps=goalFallback(goal);
+    try{ localStorage.setItem("cc_roadmap", JSON.stringify({goal,steps,aiUsed})); }catch(e){}
+    paintRoadmap(goal, steps, aiUsed);
   };
 
   // AI next move
@@ -505,15 +535,11 @@
   async function loadRecs(){
     const sig=USED_SIG;
     try{ const c=JSON.parse(localStorage.getItem("cc_recs")||"null"); if(c&&c.sig===sig&&Array.isArray(c.recs)&&c.recs.length) return paintRecs(c.recs,"Based on your progress."); }catch(e){}
-    let recs=null;
-    try{ if(window.cowork&&typeof window.cowork.askClaude==="function"){
-      const catalog=SKILLS.map(s=>({skillId:s.skillId,name:s.name,status:s.status,desc:(s.description||"").slice(0,130)}));
-      const used=SKILLS.filter(s=>s.status==="used").map(s=>s.skillId);
-      const prompt='You are the recommendation engine for a business-agent command center. Below is the catalog (status used/pending) and what the user has completed. Recommend the 4 best NEXT skills, favoring pending ones that logically follow (foundations before tactics). Return ONLY raw JSON: {"recommendations":[{"skillId":"...","reason":"one short sentence"}]}.';
-      const resp=await window.cowork.askClaude(prompt,[{completed:used},{catalog}]);
-      const txt=typeof resp==="string"?resp:rawText(resp); const m=txt.match(/\{[\s\S]*\}/);
-      if(m){ const j=JSON.parse(m[0]); if(j&&Array.isArray(j.recommendations)) recs=j.recommendations; }
-    } }catch(e){ recs=null; }
+    const catalog=SKILLS.map(s=>({skillId:s.skillId,name:s.name,status:s.status,desc:(s.description||"").slice(0,70)}));
+    const used=SKILLS.filter(s=>s.status==="used").map(s=>s.skillId);
+    const prompt='You are the recommendation engine for a business-agent command center. Catalog (each with status used/pending) and the user\'s completed list are provided. Recommend the 4 best NEXT skills, favoring pending ones that logically follow (foundations before tactics). Use ONLY skillId values from the catalog. Return ONLY JSON: {"recommendations":[{"skillId":"...","reason":"one short sentence"}]}.';
+    const j=await askAI(prompt,[{completed:used},{catalog}]);
+    let recs = (j&&Array.isArray(j.recommendations)) ? j.recommendations.filter(x=>x&&x.skillId&&byId[x.skillId]) : null;
     if(sig!==USED_SIG) return;
     if(!recs||!recs.length){ paintRecs(ruleFallback(),"Suggested next steps."); return; }
     try{ localStorage.setItem("cc_recs",JSON.stringify({sig,recs})); }catch(e){}
@@ -570,7 +596,7 @@
       setupNav();
       document.getElementById("cc-q").addEventListener("input",e=>applySearch(e.target.value));
       document.getElementById("cc-goal-in").addEventListener("keydown",e=>{ if(e.key==="Enter") ccBuildRoadmap(); });
-      try{ const rm=JSON.parse(localStorage.getItem("cc_roadmap")||"null"); if(rm&&rm.steps){ document.getElementById("cc-goal-in").value=rm.goal||""; paintRoadmap(rm.goal||"", rm.steps); } }catch(e){}
+      try{ const rm=JSON.parse(localStorage.getItem("cc_roadmap")||"null"); if(rm&&rm.steps){ document.getElementById("cc-goal-in").value=rm.goal||""; paintRoadmap(rm.goal||"", rm.steps, rm.aiUsed!==false); } }catch(e){}
       status.style.display="none"; document.getElementById("cc").style.display="block";
       lastRecSig=USED_SIG; loadRecs();
     }catch(e){ status.textContent="Failed to load command center: "+(e&&e.message?e.message:e); }
