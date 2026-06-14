@@ -1,8 +1,8 @@
 ---
-description: Build the Rockstar Agents home — a live artifact listing every agent with its skills and tools
+description: Build the Rockstar Agent Command Center — a live, per-user artifact for tracking, playbooks, a journey map, an AI roadmap, and every agent's skills and tools
 ---
 
-Render the **Rockstar Agents home** as a LIVE Cowork artifact.
+Render the **Rockstar Agent Command Center** as a LIVE Cowork artifact.
 
 ## Do exactly this — do not improvise the UI
 1. **Find the EXACT tool name.** In THIS session, find the available tool whose name ends
@@ -11,10 +11,20 @@ Render the **Rockstar Agents home** as a LIVE Cowork artifact.
    to confirm it returns `{ agents: [...] }`.
 2. Read the file `skills/rockstar-agents-home/templates/agents-home.html`.
 3. Copy its contents as the HTML body, but **replace the token `__ROCKSTAR_AGENTS_TOOL__`
-   with the exact tool name from step 1** (the `const TOOL` line). Change nothing else.
+   with the exact tool name from step 1** (the `const TOOL_AGENTS` line). Change nothing else.
 4. Call `mcp__cowork__create_artifact` with that HTML body and
    `mcp_tools: ["<exact tool name from step 1>"]` (required — the page can only call tools
    listed here).
+
+## What the artifact includes
+The template renders a full command center with a top nav: **Dashboard** (completion ring,
+AI "Your next move", activity heatmap + streak, Pinned, Continue), **Playbooks** (guided
+multi-skill sequences), **Journey Map** (Mermaid flow of the playbooks), **Goal Roadmap**
+(type a goal, the AI builds an ordered path), and **All Skills** (search, filter, launch,
+favorites, per-skill notes + output links, mark-done). Usage is tracked **per user,
+device-local** (browser localStorage) — private to each user, not synced across devices.
+The AI panels use `window.cowork.askClaude` and fall back gracefully if it's unavailable.
+No extra setup or `mcp_tools` beyond the one `__rockstar_agents` tool.
 
 ## Tool-name rule — THIS is what was breaking it
 In Cowork live artifacts, MCP calls route by the **fully-qualified UUID name**

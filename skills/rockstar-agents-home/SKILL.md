@@ -1,18 +1,20 @@
 ---
 name: rockstar-agents-home
 description: >
-  Use when the user wants to browse or see the available Rockstar / IR agents —
-  e.g. "show me the agents", "what agents do I have", "open the agents home",
-  "list the orchestrators", "what can Rockstar do", "agent directory/menu". Renders
-  a LIVE Cowork artifact listing every agent with the skills and tools inside each,
-  re-fetching from the server every time the user reopens it.
+  Use when the user wants to browse their Rockstar / IR agents or track their
+  progress — e.g. "show me the agents", "what agents do I have", "open the agents
+  home / command center", "what should I run next", "what have I used", "my
+  progress". Renders a LIVE, per-user Cowork artifact: a command center with usage
+  tracking, an AI "next move", guided playbooks, a journey map, a goal roadmap, and
+  every agent's skills and tools — re-fetching the catalog each time it's reopened.
 ---
 
-# Rockstar Agents home (live)
+# Rockstar Agent Command Center (live)
 
-Render a LIVE Cowork artifact that lists every Rockstar / IR agent the user can
-access, with the skills and tools inside each. Each skill has a **Start chat**
-button that opens a new Cowork chat for that skill.
+Render a LIVE Cowork artifact: a per-user command center over every Rockstar / IR
+agent the user can access. It tracks which skills they've used vs. pending, suggests
+the next move, and lets them launch any skill. Each skill has a **Start chat** button
+that opens a new Cowork chat for that skill.
 
 ## Procedure
 1. **Find the EXACT tool name.** Look at the tools available in THIS session and find
@@ -22,14 +24,28 @@ button that opens a new Cowork chat for that skill.
    Tool-name rule below.
 2. Read `templates/agents-home.html` (in this skill folder).
 3. Copy that file's contents as the HTML body, but **replace the token
-   `__ROCKSTAR_AGENTS_TOOL__` with the exact tool name from step 1** (the `const TOOL`
+   `__ROCKSTAR_AGENTS_TOOL__` with the exact tool name from step 1** (the `const TOOL_AGENTS`
    line in the page). Do not change anything else in the markup.
 4. Call `mcp__cowork__create_artifact` with that HTML body and
    `mcp_tools: ["<the exact tool name from step 1>"]` (required — the page can only call
    tools listed here). Use the SAME UUID name here, NOT the friendly `ir-mcp` name.
-5. That's it. The template fetches live via `window.cowork.callMcpTool`, unwraps the
-   response, renders the agent/skills/tools, has a search box, wires every Start chat
-   button, and refreshes on reopen.
+5. That's it. The template fetches the catalog live via `window.cowork.callMcpTool`, renders
+   the full command center, and refreshes on reopen.
+
+## What the template renders
+A command center with a top nav:
+- **Dashboard** — completion ring (done/pending/total), an AI "Your next move" panel, an
+  activity heatmap + day streak, a Pinned row, and a Continue row.
+- **Playbooks** — guided multi-skill sequences (e.g. "Launch a new offer") with progress
+  and a highlighted next step.
+- **Journey Map** — a Mermaid flow of the playbook chains, colored by done/pending.
+- **Goal Roadmap** — the user types a goal and the AI builds an ordered path from the catalog.
+- **All Skills** — search, category filters, launch, favorites (★), per-skill notes + output
+  links, and mark-done.
+
+Progress, favorites, notes and activity are stored **per user, device-local** (browser
+localStorage) — private to each user, not synced across devices. AI panels use
+`window.cowork.askClaude` and fall back to deterministic suggestions if it's unavailable.
 
 ## Tool-name rule (this is what breaks if you get it wrong)
 - In Cowork live artifacts, MCP tool calls route by the **fully-qualified UUID name**
