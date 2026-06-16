@@ -10,8 +10,8 @@
     {
       "name": "live-output-artifacts",
       "source": "./",
-      "version": "1.7.0",
-      "description": "Live Cowork artifacts for IR MCP \u2014 auto-render agent output, plus a Rockstar Agents home listing every agent's skills and tools.",
+      "version": "1.8.0",
+      "description": "Live Cowork artifacts for IR MCP \u2014 auto-render agent output, a Rockstar Agents command center (now with an Outputs tab of every deliverable, by client/agent/skill), and a chat panel.",
       "category": "productivity",
       "keywords": [
         "mcp",

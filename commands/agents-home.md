@@ -5,16 +5,17 @@ description: Build the Rockstar Agent Command Center — a live, per-user artifa
 Render the **Rockstar Agent Command Center** as a LIVE Cowork artifact.
 
 ## Do exactly this — do not improvise the UI
-1. **Find the EXACT tool name.** In THIS session, find the available tool whose name ends
-   in `__rockstar_agents` — it looks like `mcp__<serverId>__rockstar_agents` where
-   `<serverId>` is an opaque UUID (e.g. `mcp__5689d4cc-…__rockstar_agents`). Call it once
-   to confirm it returns `{ agents: [...] }`.
+1. **Find the EXACT tool names — there are TWO.** In THIS session, find the available tools
+   whose names end in `__rockstar_agents` and `__my_outputs` — they look like
+   `mcp__<serverId>__rockstar_agents` and `mcp__<serverId>__my_outputs` (same UUID serverId).
+   Call `rockstar_agents` once to confirm it returns `{ agents: [...] }`.
 2. Read the file `skills/rockstar-agents-home/templates/agents-home.html`.
-3. Copy its contents as the HTML body, but **replace the token `__ROCKSTAR_AGENTS_TOOL__`
-   with the exact tool name from step 1** (the `const TOOL_AGENTS` line). Change nothing else.
+3. Copy its contents as the HTML body, then replace BOTH tokens (change nothing else):
+   - `__ROCKSTAR_AGENTS_TOOL__` → the exact `__rockstar_agents` name (`const TOOL_AGENTS`)
+   - `__MY_OUTPUTS_TOOL__` → the exact `__my_outputs` name (`const TOOL_OUTPUTS`)
 4. Call `mcp__cowork__create_artifact` with that HTML body and
-   `mcp_tools: ["<exact tool name from step 1>"]` (required — the page can only call tools
-   listed here).
+   `mcp_tools: ["<rockstar_agents name>", "<my_outputs name>"]` (required — BOTH; the page can
+   only call tools listed here).
 
 ## What the artifact includes
 The template renders a full command center with a top nav: **Dashboard** (completion ring,

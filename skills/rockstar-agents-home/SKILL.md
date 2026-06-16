@@ -17,20 +17,22 @@ the next move, and lets them launch any skill. Each skill has a **Start chat** b
 that opens a new Cowork chat for that skill.
 
 ## Procedure
-1. **Find the EXACT tool name.** Look at the tools available in THIS session and find
-   the one whose name ends in `__rockstar_agents`. It looks like
-   `mcp__<serverId>__rockstar_agents` where `<serverId>` is an opaque UUID. Call it once
-   to confirm it returns `{ agents: [...] }`. **This exact name is critical** — see the
-   Tool-name rule below.
+1. **Find the EXACT tool names — there are TWO.** Look at the tools available in THIS
+   session and find:
+   - the one whose name ends in `__rockstar_agents` (e.g. `mcp__<serverId>__rockstar_agents`)
+   - the one whose name ends in `__my_outputs` (e.g. `mcp__<serverId>__my_outputs`)
+   `<serverId>` is an opaque UUID, the SAME for both. Call `rockstar_agents` once to confirm
+   it returns `{ agents: [...] }`. **These exact names are critical** — see the Tool-name rule.
 2. Read `templates/agents-home.html` (in this skill folder).
-3. Copy that file's contents as the HTML body, but **replace the token
-   `__ROCKSTAR_AGENTS_TOOL__` with the exact tool name from step 1** (the `const TOOL_AGENTS`
-   line in the page). Do not change anything else in the markup.
+3. Copy that file's contents as the HTML body, then replace BOTH tokens (do not change
+   anything else in the markup):
+   - `__ROCKSTAR_AGENTS_TOOL__` → the exact `__rockstar_agents` tool name (the `const TOOL_AGENTS` line)
+   - `__MY_OUTPUTS_TOOL__` → the exact `__my_outputs` tool name (the `const TOOL_OUTPUTS` line)
 4. Call `mcp__cowork__create_artifact` with that HTML body and
-   `mcp_tools: ["<the exact tool name from step 1>"]` (required — the page can only call
-   tools listed here). Use the SAME UUID name here, NOT the friendly `ir-mcp` name.
-5. That's it. The template fetches the catalog live via `window.cowork.callMcpTool`, renders
-   the full command center, and refreshes on reopen.
+   `mcp_tools: ["<rockstar_agents name>", "<my_outputs name>"]` (required — BOTH, the page can
+   only call tools listed here). Use the SAME UUID names here, NOT the friendly `ir-mcp` names.
+5. That's it. The template fetches the catalog + the user's outputs live via
+   `window.cowork.callMcpTool`, renders the full command center, and refreshes on reopen.
 
 ## What the template renders
 A command center with a top nav:
@@ -42,6 +44,9 @@ A command center with a top nav:
 - **Goal Roadmap** — the user types a goal and the AI builds an ordered path from the catalog.
 - **All Skills** — search, category filters, launch, favorites (★), per-skill notes + output
   links, and mark-done.
+- **Outputs** — the user's saved deliverables (live, via `my_outputs`): summary stats, search,
+  filter chips for **Client / Skill / Agent**, and cards that open the FULL deliverable in a
+  modal (lazy-loaded the first time the tab is opened).
 
 Progress, favorites, notes and activity are stored **per user, device-local** (browser
 localStorage) — private to each user, not synced across devices. AI panels use

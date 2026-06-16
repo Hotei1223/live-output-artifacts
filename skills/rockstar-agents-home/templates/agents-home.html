@@ -176,6 +176,39 @@
   .cc-toast{ position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px); opacity:0; background:#1a1530; color:#fff; border:1px solid var(--bd-h); padding:11px 18px; border-radius:11px; font:600 12.5px var(--sans); box-shadow:0 10px 40px rgba(0,0,0,.5); transition:all .2s; pointer-events:none; z-index:50; }
   .cc-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
   .cc-note-foot{ margin:34px 2px 0; color:var(--faint); font-size:11.5px; line-height:1.6; max-width:800px; border-top:1px solid var(--bd); padding-top:16px; }
+
+  /* Outputs tab */
+  .co-stats{ display:flex; gap:10px; flex-wrap:wrap; margin:2px 2px 16px; }
+  .co-stat{ display:flex; flex-direction:column; gap:3px; padding:13px 17px; border-radius:14px; background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.022)); border:1px solid var(--bd); min-width:110px; }
+  .co-stat b{ font-size:23px; font-weight:780; color:#fff; line-height:1; } .co-stat span{ font:600 10px var(--mono); letter-spacing:.12em; text-transform:uppercase; color:var(--faint); }
+  .co-frow{ margin:14px 2px 4px; } .co-flabel{ font:700 10px var(--mono); letter-spacing:.18em; text-transform:uppercase; color:var(--faint); margin:0 0 7px; }
+  .co-card{ display:flex; flex-direction:column; gap:9px; cursor:pointer; overflow:hidden; background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.022)); border:1px solid var(--bd); border-radius:15px; padding:16px 16px 14px; transition:border-color .18s, box-shadow .18s, transform .18s; }
+  .co-card:hover{ border-color:var(--bd-h); transform:translateY(-3px); box-shadow:0 12px 36px rgba(124,92,255,.22); }
+  .co-card .ttl{ font-size:14.5px; font-weight:730; color:#fff; line-height:1.3; }
+  .co-card .prev{ font-size:12.5px; color:var(--muted); line-height:1.55; max-height:66px; overflow:hidden; }
+  .co-tags{ display:flex; flex-wrap:wrap; gap:6px; }
+  .co-tag{ font:600 9.5px var(--mono); letter-spacing:.05em; text-transform:uppercase; padding:3px 8px; border-radius:7px; white-space:nowrap; background:rgba(124,92,255,.14); border:1px solid rgba(124,92,255,.3); color:#cdbcff; }
+  .co-tag.skill{ background:rgba(255,206,87,.12); border-color:rgba(255,206,87,.3); color:#ffe39a; }
+  .co-tag.client{ background:rgba(54,224,160,.12); border-color:rgba(54,224,160,.3); color:#bafadf; }
+  .co-card .meta{ display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:auto; padding-top:4px; font:600 10.5px var(--mono); color:var(--faint); }
+  .co-empty{ text-align:center; color:var(--faint); padding:50px 20px; font:14px var(--mono); }
+  .co-modal{ position:fixed; inset:0; z-index:60; display:none; align-items:flex-start; justify-content:center; padding:40px 18px; overflow-y:auto; background:rgba(6,8,16,.74); backdrop-filter:blur(6px); }
+  .co-modal.on{ display:flex; }
+  .co-sheet{ width:100%; max-width:860px; background:#0d1020; border:1px solid var(--bd-h); border-radius:20px; box-shadow:0 30px 90px rgba(0,0,0,.6); overflow:hidden; }
+  .co-sheet-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:14px; padding:22px 24px 16px; border-bottom:1px solid var(--bd); background:linear-gradient(135deg,rgba(124,92,255,.16),rgba(210,75,239,.08)); }
+  .co-sheet-head h2{ margin:0; font-size:20px; font-weight:760; color:#fff; line-height:1.25; }
+  .co-x{ flex:none; cursor:pointer; background:rgba(255,255,255,.06); border:1px solid var(--bd); color:var(--muted); width:34px; height:34px; border-radius:10px; font-size:18px; line-height:1; display:flex; align-items:center; justify-content:center; transition:all .14s; }
+  .co-x:hover{ color:#fff; border-color:var(--bd-h); }
+  .co-sheet-body{ padding:22px 26px 30px; max-height:64vh; overflow-y:auto; }
+  .co-doc{ color:var(--txt); font:15px/1.7 var(--sans); }
+  .co-doc h1,.co-doc h2,.co-doc h3{ color:#fff; margin:22px 0 8px; line-height:1.3; } .co-doc h1{ font-size:22px; } .co-doc h2{ font-size:18px; } .co-doc h3{ font-size:15.5px; }
+  .co-doc p{ margin:0 0 12px; } .co-doc ul,.co-doc ol{ margin:0 0 12px; padding-left:22px; } .co-doc li{ margin:3px 0; }
+  .co-doc code{ font:13px var(--mono); background:rgba(255,255,255,.07); padding:2px 6px; border-radius:5px; }
+  .co-doc pre{ background:rgba(255,255,255,.05); border:1px solid var(--bd); border-radius:10px; padding:14px; white-space:pre-wrap; word-break:break-word; overflow-wrap:anywhere; }
+  .co-doc pre code{ background:none; padding:0; }
+  .co-doc strong{ color:#fff; } .co-doc hr{ border:none; border-top:1px solid var(--bd); margin:18px 0; }
+  .co-copy{ display:inline-flex; align-items:center; gap:7px; cursor:pointer; padding:8px 14px; border-radius:10px; font:600 12px var(--sans); color:#cdbcff; background:rgba(124,92,255,.14); border:1px solid rgba(124,92,255,.35); transition:all .14s; }
+  .co-copy:hover{ color:#fff; border-color:var(--bd-h); }
 </style>
 
 <div id="cc-status">Booting command center&hellip;</div>
@@ -194,6 +227,7 @@
     <button data-sec="map">Journey Map</button>
     <button data-sec="goal">Goal Roadmap</button>
     <button data-sec="all">All Skills</button>
+    <button data-sec="outputs">Outputs</button>
   </div>
 
   <!-- DASHBOARD -->
@@ -277,12 +311,28 @@
     <div class="cc-none" id="cc-none">No skills match.</div>
   </section>
 
+  <!-- OUTPUTS — the user's saved deliverables (live, via my_outputs) -->
+  <section id="sec-outputs">
+    <div class="co-stats" id="co-stats"></div>
+    <div class="cc-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4-4"></path></svg>
+      <input id="co-q" type="text" placeholder="Search deliverables&hellip;" autocomplete="off">
+    </div>
+    <div id="co-filters"></div>
+    <div class="cc-grid" id="co-grid" style="margin-top:18px"></div>
+  </section>
+
   <p class="cc-note-foot" id="cc-note"></p>
 </div></div>
 <div class="cc-toast" id="cc-toast"></div>
+<div class="co-modal" id="co-modal"><div class="co-sheet">
+  <div class="co-sheet-head"><h2 id="co-m-title">&nbsp;</h2><div class="co-x" id="co-m-close">&times;</div></div>
+  <div class="co-sheet-body"><div class="co-doc" id="co-m-body"></div></div>
+</div></div>
 
 <script>
   const TOOL_AGENTS = "__ROCKSTAR_AGENTS_TOOL__";
+  const TOOL_OUTPUTS = "__MY_OUTPUTS_TOOL__";
   const LS_USAGE = "cc_usage_v2", LS_LOG = "cc_log_v2";
   const PLAY = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
   const DAY = 86400000;
@@ -582,8 +632,113 @@
       document.querySelectorAll("#cc-nav button").forEach(x=>x.classList.toggle("on",x===b));
       document.querySelectorAll("#cc section").forEach(s=>s.classList.toggle("on", s.id==="sec-"+sec));
       if(sec==="map" && !mapRendered) renderMap();
+      if(sec==="outputs" && !outputsLoaded) loadOutputs();
     }));
   }
+
+  // ── Outputs tab — live deliverables via my_outputs (lazy-loaded on first open) ──
+  let OUTPUTS={ outputs:[], clients:[], skills:[], orchestrators:[] };
+  let outputsLoaded=false, oClient="", oSkill="", oOrch="", oQ="";
+  async function coTool(args){ return unwrap(await window.cowork.callMcpTool(TOOL_OUTPUTS, args||{})); }
+  function coDate(s){ try{ return new Date(s).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}); }catch{ return ""; } }
+  function coMd(src){
+    let h=esc(src||""); const b=h.split(/\n```/);
+    h=b.map((x,i)=> i%2 ? "<pre><code>"+x.replace(/^[a-z]*\n/i,"")+"</code></pre>" : x).join("");
+    h=h.replace(/^### (.*)$/gm,"<h3>$1</h3>").replace(/^## (.*)$/gm,"<h2>$1</h2>").replace(/^# (.*)$/gm,"<h1>$1</h1>")
+       .replace(/^\s*---\s*$/gm,"<hr>").replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>").replace(/`([^`]+)`/g,"<code>$1</code>")
+       .replace(/^\s*[-*] (.*)$/gm,"<li>$1</li>").replace(/(<li>[\s\S]*?<\/li>)/g,m=>"<ul>"+m+"</ul>").replace(/<\/ul>\s*<ul>/g,"");
+    h=h.split(/\n{2,}/).map(p=> /^\s*<(h\d|ul|pre|hr)/.test(p)?p:(p.trim()?"<p>"+p.replace(/\n/g,"<br>")+"</p>":"")).join("");
+    return h;
+  }
+  // Render a deliverable by its format: json -> pretty code, text -> preformatted,
+  // markdown -> formatted. Falls back to JSON pretty-print if content clearly is JSON.
+  function coRenderContent(content, format){
+    const raw=String(content||"");
+    if(format==="text") return "<pre>"+esc(raw)+"</pre>";
+    if(format==="json" || /^\s*[\{\[]/.test(raw)){
+      try{ return "<pre>"+esc(JSON.stringify(JSON.parse(raw), null, 2))+"</pre>"; }
+      catch(e){ if(format==="json") return "<pre>"+esc(raw)+"</pre>"; }
+    }
+    return coMd(raw);
+  }
+  function coFiltered(){
+    const n=oQ.trim().toLowerCase();
+    return OUTPUTS.outputs.filter(o=>{
+      if(oClient==="__self__"){ if(o.clientId) return false; }
+      else if(oClient && String(o.clientId||"")!==oClient) return false;
+      if(oSkill && String(o.skillName||"")!==oSkill) return false;
+      if(oOrch && String(o.orchestrator||"")!==oOrch) return false;
+      if(n){ const hay=(o.title+" "+(o.preview||"")+" "+(o.skillName||"")+" "+(o.clientName||"")).toLowerCase(); if(!hay.includes(n)) return false; }
+      return true;
+    });
+  }
+  function coCards(list){
+    if(!list.length) return '<div class="co-empty">No deliverables match yet.<br>Finished outputs from your agents appear here automatically.</div>';
+    return list.map(o=>`<div class="co-card" data-id="${attr(o.id)}">
+      <div class="ttl">${esc(o.title)}</div>
+      <div class="co-tags"><span class="co-tag">${esc(o.orchestrator)}</span>${o.skillName?`<span class="co-tag skill">${esc(o.skillName)}</span>`:""}${o.clientName?`<span class="co-tag client">${esc(o.clientName)}</span>`:""}</div>
+      <div class="prev">${esc(o.preview||"")}</div>
+      <div class="meta"><span>${coDate(o.createdAt)}</span><span>${(o.contentLength||0).toLocaleString()} chars &rarr;</span></div>
+    </div>`).join("");
+  }
+  function coRenderGrid(){
+    const g=document.getElementById("co-grid"); if(g) g.innerHTML=coCards(coFiltered());
+    document.querySelectorAll("#co-grid .co-card").forEach(c=>c.addEventListener("click",()=>coOpen(c.getAttribute("data-id"))));
+  }
+  function coRender(){
+    const total=OUTPUTS.outputs.length, clientList=OUTPUTS.clients.filter(c=>!c.isPrimary);
+    document.getElementById("co-stats").innerHTML =
+      `<div class="co-stat"><b>${total}</b><span>Deliverables</span></div>`+
+      (clientList.length?`<div class="co-stat"><b>${clientList.length}</b><span>Clients</span></div>`:"")+
+      (OUTPUTS.skills.length?`<div class="co-stat"><b>${OUTPUTS.skills.length}</b><span>Skills</span></div>`:"");
+    let f="";
+    if(clientList.length){
+      const primary=OUTPUTS.clients.find(c=>c.isPrimary);
+      const selfLabel=primary?esc(primary.name)+" (you)":"Myself";
+      f+=`<div class="co-frow"><p class="co-flabel">Client</p><div class="cc-filters">`+
+        `<div class="cc-chip ${oClient===""?"on":""}" data-g="client" data-v="">All</div>`+
+        `<div class="cc-chip ${oClient==="__self__"?"on":""}" data-g="client" data-v="__self__">${selfLabel}</div>`+
+        clientList.map(c=>`<div class="cc-chip ${oClient===c.id?"on":""}" data-g="client" data-v="${attr(c.id)}">${esc(c.name)}</div>`).join("")+
+        `</div></div>`;
+    }
+    if(OUTPUTS.skills.length){ f+=`<div class="co-frow"><p class="co-flabel">Skill</p><div class="cc-filters"><div class="cc-chip ${oSkill===""?"on":""}" data-g="skill" data-v="">All</div>`+OUTPUTS.skills.map(s=>`<div class="cc-chip ${oSkill===s?"on":""}" data-g="skill" data-v="${attr(s)}">${esc(s)}</div>`).join("")+`</div></div>`; }
+    if(OUTPUTS.orchestrators.length>1){ f+=`<div class="co-frow"><p class="co-flabel">Agent</p><div class="cc-filters"><div class="cc-chip ${oOrch===""?"on":""}" data-g="orch" data-v="">All</div>`+OUTPUTS.orchestrators.map(o=>`<div class="cc-chip ${oOrch===o?"on":""}" data-g="orch" data-v="${attr(o)}">${esc(o)}</div>`).join("")+`</div></div>`; }
+    document.getElementById("co-filters").innerHTML=f;
+    document.querySelectorAll("#co-filters .cc-chip").forEach(c=>c.addEventListener("click",()=>{
+      const g=c.getAttribute("data-g"), v=c.getAttribute("data-v");
+      if(g==="client") oClient=v; else if(g==="skill") oSkill=v; else if(g==="orch") oOrch=v;
+      coRender();
+    }));
+    coRenderGrid();
+  }
+  async function coOpen(id){
+    const m=document.getElementById("co-modal"), t=document.getElementById("co-m-title"), bd=document.getElementById("co-m-body");
+    t.textContent="Loading..."; bd.innerHTML='<p style="color:var(--faint);font-family:var(--mono)">Fetching full deliverable&hellip;</p>'; m.classList.add("on");
+    try{
+      const res=await coTool({outputId:id}); const o=res.output;
+      if(!o){ bd.innerHTML='<p style="color:var(--warn)">Could not load this deliverable.</p>'; return; }
+      t.textContent=o.title||"Deliverable";
+      const tags=[o.orchestrator,o.skillName,o.clientName].filter(Boolean).map(x=>`<span class="co-tag">${esc(x)}</span>`).join(" ");
+      bd.innerHTML=`<div class="co-tags" style="margin-bottom:14px">${tags} <button class="co-copy" id="co-copy">Copy</button></div>`+coRenderContent(o.content, o.format);
+      const cp=document.getElementById("co-copy"); if(cp) cp.addEventListener("click",()=>{ try{ navigator.clipboard.writeText(o.content||""); toast("Copied to clipboard"); }catch{ toast("Copy not available"); } });
+    }catch(e){ bd.innerHTML='<p style="color:var(--warn)">Error: '+esc(e.message)+'</p>'; }
+  }
+  async function loadOutputs(){
+    outputsLoaded=true;
+    const grid=document.getElementById("co-grid");
+    if(grid) grid.innerHTML='<div class="co-empty">Loading your deliverables&hellip;</div>';
+    try{
+      OUTPUTS=await coTool({});
+      if(OUTPUTS&&OUTPUTS.error){ if(grid) grid.innerHTML='<div class="co-empty">Sign in to view your outputs.</div>'; return; }
+      coRender();
+      document.getElementById("co-q").addEventListener("input",e=>{ oQ=e.target.value; coRenderGrid(); });
+    }catch(e){
+      outputsLoaded=false;
+      if(grid) grid.innerHTML='<div class="co-empty">Failed to load outputs: '+esc(e&&e.message?e.message:e)+'</div>';
+    }
+  }
+  document.getElementById("co-m-close").addEventListener("click",()=>document.getElementById("co-modal").classList.remove("on"));
+  document.getElementById("co-modal").addEventListener("click",e=>{ if(e.target.id==="co-modal") e.currentTarget.classList.remove("on"); });
 
   async function load(){
     const status=document.getElementById("cc-status");
