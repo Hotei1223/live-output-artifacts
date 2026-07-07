@@ -1,3 +1,89 @@
+<script>
+/* ─────────────────────────────────────────────────────────────────────────
+   live-output-artifacts — HOST ADAPTER (portable runtime shim)
+   Makes this artifact run across hosts instead of hard-depending on Cowork:
+     1. Claude Cowork           → native window.cowork.callMcpTool / askClaude
+     2. OpenAI / Codex Apps     → window.openai.callTool / sendFollowUpMessage
+     3. Any generic MCP host    → window.{craftAgent|codex|mcpHost|host}.callMcpTool|callTool
+     4. Authenticated HTTP      → MCP Streamable-HTTP fallback (opt-in via config)
+   When no bridge is present it degrades to a clear error instead of throwing on
+   an undefined global. Define window.cowork only if the host has not already.
+
+   Config (all optional, host- or embedder-supplied):
+     window.__MCP_ENDPOINT      | <meta name="mcp-endpoint">   HTTP fallback URL
+     window.__MCP_TOKEN         | <meta name="mcp-token">      Bearer token for that URL
+     window.__LOA_NEW_CHAT_URL  default "claude://cowork/new?q="  launch-a-skill URL base
+   ───────────────────────────────────────────────────────────────────────── */
+(function(){
+  if (window.cowork && typeof window.cowork.callMcpTool === "function") return; // native Cowork: leave it alone
+
+  function meta(n){ var m=document.querySelector('meta[name="'+n+'"]'); return m && m.content; }
+  var ENDPOINT = window.__MCP_ENDPOINT || meta("mcp-endpoint") || "";
+  var TOKEN    = window.__MCP_TOKEN    || meta("mcp-token")    || "";
+
+  var oai = (typeof window.openai === "object" && window.openai) || null;        // OpenAI / Codex Apps SDK
+  var gen = window.craftAgent || window.codex || window.mcpHost || window.host || null;
+
+  async function callViaHost(name, args){
+    args = args || {};
+    if (oai && typeof oai.callTool === "function")            return await oai.callTool(name, args);
+    if (gen && typeof gen.callMcpTool === "function")         return await gen.callMcpTool(name, args);
+    if (gen && typeof gen.callTool === "function")            return await gen.callTool(name, args);
+    if (gen && gen.tools && typeof gen.tools.call==="function") return await gen.tools.call({ name:name, arguments:args });
+    return undefined; // no host bridge detected
+  }
+
+  // Minimal MCP Streamable-HTTP client: initialize -> notifications/initialized -> tools/call.
+  var _sid=null, _inited=false, _id=0;
+  async function rpc(method, params, notify){
+    var h={ "Content-Type":"application/json", "Accept":"application/json, text/event-stream" };
+    if(_sid)  h["Mcp-Session-Id"]=_sid;
+    if(TOKEN) h["Authorization"]="Bearer "+TOKEN;
+    var body={ jsonrpc:"2.0", method:method, params:params||{} };
+    if(!notify) body.id=++_id;
+    var res=await fetch(ENDPOINT,{ method:"POST", headers:h, body:JSON.stringify(body) });
+    var sid=res.headers.get("Mcp-Session-Id"); if(sid) _sid=sid;
+    if(notify) return null;
+    var text=await res.text(), data=null;
+    if((res.headers.get("Content-Type")||"").indexOf("text/event-stream")>=0){
+      text.split(/\r?\n/).forEach(function(l){ if(l.indexOf("data:")===0){ try{ data=JSON.parse(l.slice(5).trim()); }catch(e){} } });
+    } else { try{ data=JSON.parse(text); }catch(e){} }
+    if(!res.ok || (data&&data.error)) throw new Error((data&&data.error&&data.error.message) || ("HTTP "+res.status));
+    return data ? data.result : null;
+  }
+  async function callViaHttp(name, args){
+    if(!ENDPOINT) throw new Error("No MCP host detected. Open this inside Cowork/Codex, or set window.__MCP_ENDPOINT (+ window.__MCP_TOKEN).");
+    if(!_inited){
+      await rpc("initialize",{ protocolVersion:"2025-06-18", capabilities:{}, clientInfo:{ name:"loa-host-adapter", version:"1.0" } });
+      await rpc("notifications/initialized",{},true);
+      _inited=true;
+    }
+    return await rpc("tools/call",{ name:name, arguments:args||{} });
+  }
+
+  window.cowork = window.cowork || {};
+  window.cowork.callMcpTool = async function(name, args){
+    var viaHost = await callViaHost(name, args);
+    if (viaHost !== undefined) return viaHost;     // host bridge answered (incl. null)
+    return await callViaHttp(name, args);          // else authenticated HTTP fallback
+  };
+  if (typeof window.cowork.askClaude !== "function"){
+    window.cowork.askClaude = function(prompt, data){
+      if (gen && typeof gen.askLLM   === "function") return gen.askLLM(prompt, data);
+      if (gen && typeof gen.complete === "function") return gen.complete(prompt, data);
+      return Promise.resolve(null);                // no host LLM → templates use deterministic fallback
+    };
+  }
+
+  // Host-aware "launch a skill": Codex follow-up message, generic host hook, else
+  // the caller's claude:// link + clipboard copy already handle it.
+  window.__LOA_START = function(prompt){
+    if (oai && typeof oai.sendFollowUpMessage === "function"){ try{ oai.sendFollowUpMessage({ prompt:prompt }); return true; }catch(e){} }
+    if (gen && typeof gen.startChat === "function"){ try{ gen.startChat(prompt); return true; }catch(e){} }
+    return false;
+  };
+})();
+</script>
 <!-- Live artifact template for an ir-mcp orchestrator.
      Claude: copy this into create_artifact, set mcp_tools to the SAME tool name(s)
      as TOOL below, and adapt render() to the real response shape. -->

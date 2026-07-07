@@ -63,3 +63,36 @@ Live artifacts re-run your tool every time the page is opened. If your tool
 regenerates LLM output on each call, the page will produce different results on
 each reload. The skill handles this: if the output isn't meaningfully refreshable,
 it falls back to a one-time static artifact. Decide which fits your tool.
+
+## Host portability (Cowork, Codex, and beyond)
+
+Every runtime template ships with a small **host adapter** at the top (look for
+`HOST ADAPTER`). It lets the same artifact run across hosts instead of hard-binding
+to Cowork's `window.cowork` global — and, just as important, it **degrades to a
+clear message instead of throwing on an undefined global** when opened with no host.
+
+Resolution order for every `callMcpTool` / `askClaude` the templates make:
+
+1. **Claude Cowork** — native `window.cowork.callMcpTool` / `askClaude` (untouched when present).
+2. **OpenAI / Codex Apps** — `window.openai.callTool`, and `sendFollowUpMessage` for "launch a skill".
+3. **Generic MCP host** — `window.{craftAgent|codex|mcpHost|host}.callMcpTool` / `callTool` / `tools.call`.
+4. **Authenticated HTTP fallback** — a minimal MCP Streamable-HTTP client
+   (`initialize → notifications/initialized → tools/call`, SSE-aware).
+
+The HTTP fallback is **opt-in** and reads config from globals or `<meta>` tags an
+embedder can inject before the artifact loads:
+
+| Config | `<meta>` equivalent | Purpose |
+| --- | --- | --- |
+| `window.__MCP_ENDPOINT` | `<meta name="mcp-endpoint">` | MCP Streamable-HTTP URL |
+| `window.__MCP_TOKEN` | `<meta name="mcp-token">` | Bearer token for that URL |
+| `window.__LOA_NEW_CHAT_URL` | — | "launch a skill" URL base (default `claude://cowork/new?q=`) |
+
+Notes:
+- When a host bridge (1–3) answers, the HTTP path is never used.
+- The HTTP fallback is best-effort: the target server must permit the artifact's
+  origin via **CORS**, and most production MCP servers (including `ir-mcp`) require
+  a bearer token — supply one via `__MCP_TOKEN` or rely on a host bridge instead.
+- No host and no endpoint → the UI shows *"No MCP host detected…"* rather than a
+  blank/broken page. AI panels fall back to deterministic suggestions when no
+  `askClaude`/host LLM is available.
