@@ -27,7 +27,7 @@ repeatable and shippable.
 
 ## Already configured
 
-- Server: `ir-mcp` at `https://paytest.testir.xyz/mcp` (`.mcp.json`).
+- Server: `ir-mcp` at `aidistrict agents` (`.mcp.json`).
 - The skill triggers on **any** tool from the `ir-mcp` server, so new
   orchestrators you expose later are covered automatically — no per-tool edits.
 
